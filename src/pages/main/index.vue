@@ -14,7 +14,7 @@
       >
         <div class="col">
           <q-input
-            v-model="rawTagInputs[account.id]"
+            v-model.trim="rawTagInputs[account.id]"
             maxlength="200"
             outlined
             dense
@@ -37,7 +37,7 @@
 
         <div class="col">
           <q-input
-            v-model="accountList[idx].login"
+            v-model.trim="accountList[idx].login"
             maxlength="200"
             outlined
             dense
@@ -46,15 +46,26 @@
           />
         </div>
 
-        <div class="col">
+        <div v-if="isNeedPasswordField(account)" class="col">
           <q-input
-            v-model="accountList[idx].password"
-            maxlength="200"
+            v-model.trim="accountList[idx].password"
+            :type="getInputType(account)"
             outlined
             dense
             label="Пароль"
             no-error-icon
-          />
+          >
+            <template v-slot:append>
+              <q-icon
+                class="cursor-pointer"
+                :name="
+                  showPassword[account.id] ? 'o_visibility_off' : 'o_visibility'
+                "
+                color="grey-7"
+                size="18px"
+                @click="togglePassword(account)"
+              /> </template
+          ></q-input>
         </div>
 
         <div>
@@ -68,12 +79,23 @@
 <script lang="ts" setup>
 import { reactive, ref } from 'vue';
 import { IAccount, AccountType } from 'src/types';
+import { generateId } from 'src/utils';
 
 const accountTypeOptions = Object.values(AccountType);
 
+const showPassword = reactive<Record<string, boolean>>({});
+
+const togglePassword = (record: IAccount) => {
+  showPassword[record.id] = !showPassword[record.id];
+};
+
+const getInputType = (record: IAccount): 'text' | 'password' => {
+  return showPassword[record.id] ? 'text' : 'password';
+};
+
 const accountList = ref<IAccount[]>([
   {
-    id: '1',
+    id: generateId(),
     tags: [
       {
         text: 'XXX',
@@ -93,7 +115,7 @@ const accountList = ref<IAccount[]>([
     password: '12345',
   },
   {
-    id: '2',
+    id: generateId(),
     tags: [
       {
         text: 'EEEWEEWE',
@@ -113,6 +135,14 @@ const rawTagInputs = reactive<Record<string, string>>({});
 accountList.value.forEach((acc) => {
   rawTagInputs[acc.id] = acc.tags.map((t) => t.text).join('; ');
 });
+
+const isNeedPasswordField = (record: IAccount) => {
+  const isLocal = record.type === AccountType.LOCAL;
+  if (!isLocal) {
+    record.password = null;
+  }
+  return isLocal;
+};
 </script>
 
 
