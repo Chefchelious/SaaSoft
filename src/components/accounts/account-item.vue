@@ -8,7 +8,9 @@
         dense
         label="Метка"
         no-error-icon
+        :rules="[(val) => !!val.trim() || '']"
         @update:model-value="updateParentRecord"
+        class="q-pb-none"
       />
     </div>
 
@@ -21,6 +23,7 @@
         behavior="menu"
         label="Тип записи"
         @update:model-value="onUpdateAccountType"
+        class="q-pb-none"
       />
     </div>
 
@@ -32,7 +35,9 @@
         dense
         label="Логин"
         no-error-icon
+        :rules="[(val) => !!val.trim() || '']"
         @update:model-value="updateParentRecord"
+        class="q-pb-none"
       />
     </div>
 
@@ -46,6 +51,7 @@
         label="Пароль"
         no-error-icon
         @update:model-value="updateParentRecord"
+        class="q-pb-none"
       >
         <template v-slot:append>
           <q-icon

@@ -27,8 +27,12 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import { IAccount, AccountType } from 'src/types';
-import { generateId } from 'src/utils';
+import { generateId, Notify } from 'src/utils';
 import accountItem from './account-item.vue';
+import { QForm } from 'quasar';
+
+const form = ref<QForm | undefined>();
+const isFormValid = ref(true);
 
 const accountList = ref<IAccount[]>([
   {
@@ -69,7 +73,20 @@ const accountList = ref<IAccount[]>([
 
 const accountTypeOptions = Object.values(AccountType);
 
-const addAccount = () => {
+const validateForm = async () => {
+  isFormValid.value = true;
+  const is_valid = await form.value?.validate();
+
+  if (!is_valid) {
+    Notify.error('Ошибка валидации формы');
+    isFormValid.value = false;
+  }
+};
+
+const addAccount = async () => {
+  await validateForm();
+
+  if (!isFormValid.value) return;
   accountList.value.push({
     id: generateId(),
     tags: [],
