@@ -22,7 +22,7 @@
 import { getCurrentInstance } from 'vue';
 
 defineOptions({
-  name: 'main-layout',
+  name: 'MainLayout',
 });
 
 const globalProperties =
