@@ -43,6 +43,7 @@
 
     <div v-if="account.type === AccountType.LOCAL" class="col">
       <q-input
+        ref="passwordInput"
         v-model="localAccount.password"
         :type="inputType"
         maxlength="100"
@@ -50,6 +51,8 @@
         dense
         label="Пароль"
         no-error-icon
+        lazy-rules
+        :rules="[validatePassword]"
         @update:model-value="updateParentRecord"
         class="q-pb-none"
       >
@@ -77,8 +80,10 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue';
+import { computed, ref, nextTick } from 'vue';
 import { IAccount, AccountType } from 'src/types';
+import { Notify, validatePassword } from 'src/utils';
+import { QInput } from 'quasar';
 
 const props = defineProps<{
   account: IAccount;
@@ -90,9 +95,20 @@ const emit = defineEmits(['update-account', 'delete-account']);
 const localAccount = ref({ ...props.account });
 const showPassword = ref(false);
 
+const passwordInput = ref<QInput | undefined>();
+
 const inputType = computed<'text' | 'password'>(() =>
   showPassword.value ? 'text' : 'password'
 );
+
+const validatePasswordInput = async () => {
+  const isValid = await passwordInput.value?.validate();
+  if (!isValid) {
+    Notify.error('Ошибка валидации формы');
+    return false;
+  }
+  return true;
+};
 
 const tagInput = computed<string>({
   get: () => localAccount.value.tags.map((t) => t.text).join('; '),
@@ -108,8 +124,14 @@ const updateParentRecord = () => {
   emit('update-account', localAccount.value);
 };
 
-const onUpdateAccountType = () => {
+const onUpdateAccountType = (val: AccountType) => {
   localAccount.value.password = null;
   updateParentRecord();
+
+  nextTick(() => {
+    if (val === AccountType.LOCAL) {
+      validatePasswordInput();
+    }
+  });
 };
 </script>
