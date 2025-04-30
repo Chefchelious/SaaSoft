@@ -14,6 +14,7 @@
         class="q-pb-none"
       /> -->
       <q-input
+        ref="tagInputRef"
         v-model="tagInputText"
         maxlength="50"
         outlined
@@ -22,13 +23,19 @@
         no-error-icon
         lazy-rules
         :rules="[validateTagInput]"
-        @update:model-value="updateParentTag"
+        @blur="updateParentTag"
+        @update:model-value="
+          () => {
+            console.log(localAccount);
+          }
+        "
         class="q-pb-none"
       />
     </div>
 
     <div class="col-2">
       <q-select
+        ref="typeSelectRef"
         v-model="localAccount.type"
         :options="typeOptions"
         outlined
@@ -42,6 +49,7 @@
 
     <div class="col">
       <q-input
+        ref="loginInputRef"
         v-model="localAccount.login"
         maxlength="100"
         outlined
@@ -50,14 +58,14 @@
         no-error-icon
         lazy-rules
         :rules="[(val) => !!val.trim() || '']"
-        @update:model-value="updateParentRecord"
+        @blur="updateParentRecord"
         class="q-pb-none"
       />
     </div>
 
-    <div v-if="account.type === AccountType.LOCAL" class="col">
+    <div v-if="localAccount.type === AccountType.LOCAL" class="col">
       <q-input
-        ref="passwordInput"
+        ref="passwordInputRef"
         v-model="localAccount.password"
         :type="inputType"
         maxlength="100"
@@ -67,7 +75,7 @@
         no-error-icon
         lazy-rules
         :rules="[validatePassword]"
-        @update:model-value="updateParentRecord"
+        @blur="updateParentRecord"
         class="q-pb-none"
       >
         <template v-slot:append>
@@ -96,8 +104,8 @@
 <script setup lang="ts">
 import { computed, ref, nextTick, onMounted } from 'vue';
 import { IAccount, AccountType } from 'src/types';
-import { Notify, validatePassword, validateTagInput } from 'src/utils';
-import { QInput } from 'quasar';
+import { validatePassword, validateTagInput } from 'src/utils';
+import { QInput, QSelect } from 'quasar';
 
 const props = defineProps<{
   account: IAccount;
@@ -110,45 +118,54 @@ const localAccount = ref({ ...props.account });
 const tagInputText = ref('');
 const showPassword = ref(false);
 
-const passwordInput = ref<QInput | undefined>();
+const tagInputRef = ref<QInput>();
+const typeSelectRef = ref<QSelect>();
+const loginInputRef = ref<QInput>();
+const passwordInputRef = ref<QInput>();
 
 const inputType = computed<'text' | 'password'>(() =>
   showPassword.value ? 'text' : 'password'
 );
 
-const validatePasswordInput = async () => {
-  const isValid = await passwordInput.value?.validate();
-  if (!isValid) {
-    Notify.error('Ошибка валидации формы');
-    return false;
-  }
-  return true;
+const validateAll = async (): Promise<boolean> => {
+  const validTag = (await tagInputRef.value?.validate()) ?? false;
+  const validType = (await typeSelectRef.value?.validate()) ?? false;
+  const validLogin = (await loginInputRef.value?.validate()) ?? false;
+  const validPwd =
+    localAccount.value.type === AccountType.LOCAL
+      ? (await passwordInputRef.value?.validate()) ?? false
+      : true;
+
+  return validTag && validType && validLogin && validPwd;
 };
 
 const setTagValue = () => {
   tagInputText.value = localAccount.value.tags.map((t) => t.text).join('; ');
 };
 
-const updateParentTag = () => {
-  localAccount.value.tags = tagInputText.value
-    .split(';')
-    .map((s) => ({ text: s.trim() }))
-    .filter((t) => t.text.length > 0);
-  updateParentRecord();
+const updateParentTag = async () => {
+  if (await validateAll()) {
+    localAccount.value.tags = tagInputText.value
+      .split(';')
+      .map((s) => ({ text: s.trim() }))
+      .filter((t) => t.text.length > 0);
+
+    emit('update-account', localAccount.value);
+  }
 };
 
-const updateParentRecord = () => {
-  emit('update-account', localAccount.value);
+const updateParentRecord = async () => {
+  if (await validateAll()) {
+    emit('update-account', localAccount.value);
+  }
 };
 
-const onUpdateAccountType = (val: AccountType) => {
+const onUpdateAccountType = () => {
   localAccount.value.password = null;
-  updateParentRecord();
 
-  nextTick(() => {
-    if (val === AccountType.LOCAL) {
-      validatePasswordInput();
-    }
+  nextTick(async () => {
+    passwordInputRef.value?.resetValidation();
+    await updateParentRecord();
   });
 };
 
