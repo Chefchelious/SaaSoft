@@ -12,11 +12,6 @@
         lazy-rules
         :rules="[validateTagInput]"
         @blur="updateParentTag"
-        @update:model-value="
-          () => {
-            console.log(localAccount);
-          }
-        "
         class="q-pb-none"
       />
     </div>
