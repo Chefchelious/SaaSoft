@@ -1,18 +1,6 @@
 <template>
   <div class="row items-center q-col-gutter-md q-mb-lg">
     <div class="col-3">
-      <!-- <q-input
-        v-model="tagInput"
-        maxlength="50"
-        outlined
-        dense
-        label="Метка"
-        no-error-icon
-        lazy-rules
-        :rules="[validateTagInput]"
-        @update:model-value="updateParentRecord"
-        class="q-pb-none"
-      /> -->
       <q-input
         ref="tagInputRef"
         v-model="tagInputText"

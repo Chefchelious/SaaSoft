@@ -13,9 +13,9 @@
 
     <q-form ref="form" greedy no-error-focus>
       <account-item
-        v-for="(acc, idx) in accountList"
+        v-for="(acc, idx) in localList"
         :key="acc.id"
-        v-model:account="accountList[idx]"
+        v-model:account="localList[idx]"
         :type-options="accountTypeOptions"
         @delete-account="deleteAccount(acc.id)"
         @update-account="updateAccount"
@@ -25,51 +25,18 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { onMounted, ref } from 'vue';
 import { IAccount, AccountType } from 'src/types';
 import { generateId, Notify } from 'src/utils';
 import accountItem from './account-item.vue';
 import { QForm } from 'quasar';
+import { useAccountStore } from 'src/stores/account-store';
 
+const accountStore = useAccountStore();
 const form = ref<QForm | undefined>();
 const isFormValid = ref(true);
 
-const accountList = ref<IAccount[]>([
-  {
-    id: generateId(),
-    tags: [
-      {
-        text: 'XXX',
-      },
-      {
-        text: 'YYYYYYYYY',
-      },
-      {
-        text: 'IIIII',
-      },
-      {
-        text: 'MMMMMMMMMMMM',
-      },
-    ],
-    type: AccountType.LOCAL,
-    login: 'dim_dim',
-    password: '12345',
-  },
-  {
-    id: generateId(),
-    tags: [
-      {
-        text: 'EEEWEEWE',
-      },
-      {
-        text: 'TETETTTETE',
-      },
-    ],
-    type: AccountType.LDAP,
-    login: 'test_test',
-    password: null,
-  },
-]);
+const localList = ref<IAccount[]>([]);
 
 const accountTypeOptions = Object.values(AccountType);
 
@@ -85,9 +52,8 @@ const validateForm = async () => {
 
 const addAccount = async () => {
   await validateForm();
-
   if (!isFormValid.value) return;
-  accountList.value.push({
+  localList.value.push({
     id: generateId(),
     tags: [],
     type: AccountType.LOCAL,
@@ -97,13 +63,29 @@ const addAccount = async () => {
 };
 
 const updateAccount = (updatedRecord: IAccount) => {
-  const item = accountList.value.find((acc) => acc.id === updatedRecord.id);
-  if (item) {
-    Object.assign(item, updatedRecord);
+  const idx = localList.value.findIndex(
+    (account) => account.id === updatedRecord.id
+  );
+  if (idx !== -1) localList.value[idx] = updatedRecord;
+
+  const exists = accountStore.accounts.find(
+    (account) => account.id === updatedRecord.id
+  );
+  if (exists) {
+    accountStore.updateAccount(updatedRecord);
+  } else {
+    accountStore.addAccount(updatedRecord);
   }
 };
 
 const deleteAccount = (recordId: string) => {
-  accountList.value = accountList.value.filter((acc) => acc.id !== recordId);
+  localList.value = localList.value.filter(
+    (account) => account.id !== recordId
+  );
+  accountStore.deleteAccount(recordId);
 };
+
+onMounted(() => {
+  localList.value = accountStore.accounts.slice();
+});
 </script>
