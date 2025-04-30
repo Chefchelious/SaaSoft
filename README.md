@@ -11,6 +11,7 @@ SaaSoft тестовое задание. Стэк vue 3 / composition api / type
 3. Запуск проекта командой npm run dev
 
 Приложение автоматически откроется по адресу http://localhost:9000
+Лайв-демо приложения на netlify https://saas-soft.netlify.app/
 
 <h4>
 SaaSoft test, vue 3 / composition api / typescript / pinia as state manager / Quasar as UI and pinia persist plugin
@@ -25,3 +26,4 @@ Steps:
 3. Then npm run dev
 
 The website will automatically open at http://localhost:9000
+Also live-demo deployed on netlify https://saas-soft.netlify.app/
