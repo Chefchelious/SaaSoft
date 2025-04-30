@@ -1,14 +1,27 @@
 <template>
   <div class="row items-center q-col-gutter-md q-mb-lg">
     <div class="col-3">
-      <q-input
+      <!-- <q-input
         v-model="tagInput"
         maxlength="50"
         outlined
         dense
         label="Метка"
         no-error-icon
-        :rules="[(val) => !!val.trim() || '']"
+        lazy-rules
+        :rules="[validateTagInput]"
+        @update:model-value="updateParentRecord"
+        class="q-pb-none"
+      /> -->
+      <q-input
+        v-model="tagInputText"
+        maxlength="50"
+        outlined
+        dense
+        label="Метка"
+        no-error-icon
+        lazy-rules
+        :rules="[validateTagInput]"
         @update:model-value="updateParentRecord"
         class="q-pb-none"
       />
@@ -35,6 +48,7 @@
         dense
         label="Логин"
         no-error-icon
+        lazy-rules
         :rules="[(val) => !!val.trim() || '']"
         @update:model-value="updateParentRecord"
         class="q-pb-none"
@@ -80,9 +94,9 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, nextTick } from 'vue';
+import { computed, ref, nextTick, onMounted } from 'vue';
 import { IAccount, AccountType } from 'src/types';
-import { Notify, validatePassword } from 'src/utils';
+import { Notify, validatePassword, validateTagInput } from 'src/utils';
 import { QInput } from 'quasar';
 
 const props = defineProps<{
@@ -93,6 +107,7 @@ const props = defineProps<{
 const emit = defineEmits(['update-account', 'delete-account']);
 
 const localAccount = ref({ ...props.account });
+const tagInputText = ref('');
 const showPassword = ref(false);
 
 const passwordInput = ref<QInput | undefined>();
@@ -110,15 +125,19 @@ const validatePasswordInput = async () => {
   return true;
 };
 
-const tagInput = computed<string>({
-  get: () => localAccount.value.tags.map((t) => t.text).join('; '),
-  set: (val) => {
-    localAccount.value.tags = val
-      .split(';')
-      .map((s) => ({ text: s.trim() }))
-      .filter((t) => t.text.length > 0);
-  },
-});
+// const tagInput = computed<string>({
+//   get: () => localAccount.value.tags.map((t) => t.text).join('; '),
+//   set: (val) => {
+//     localAccount.value.tags = val
+//       .split(';')
+//       .map((s) => ({ text: s.trim() }))
+//       .filter((t) => t.text.length > 0);
+//   },
+// });
+
+const setTagValue = () => {
+  tagInputText.value = localAccount.value.tags.map((t) => t.text).join('; ');
+};
 
 const updateParentRecord = () => {
   emit('update-account', localAccount.value);
@@ -134,4 +153,8 @@ const onUpdateAccountType = (val: AccountType) => {
     }
   });
 };
+
+onMounted(() => {
+  setTagValue();
+});
 </script>
