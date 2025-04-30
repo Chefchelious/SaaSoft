@@ -22,7 +22,7 @@
         no-error-icon
         lazy-rules
         :rules="[validateTagInput]"
-        @update:model-value="updateParentRecord"
+        @update:model-value="updateParentTag"
         class="q-pb-none"
       />
     </div>
@@ -125,18 +125,16 @@ const validatePasswordInput = async () => {
   return true;
 };
 
-// const tagInput = computed<string>({
-//   get: () => localAccount.value.tags.map((t) => t.text).join('; '),
-//   set: (val) => {
-//     localAccount.value.tags = val
-//       .split(';')
-//       .map((s) => ({ text: s.trim() }))
-//       .filter((t) => t.text.length > 0);
-//   },
-// });
-
 const setTagValue = () => {
   tagInputText.value = localAccount.value.tags.map((t) => t.text).join('; ');
+};
+
+const updateParentTag = () => {
+  localAccount.value.tags = tagInputText.value
+    .split(';')
+    .map((s) => ({ text: s.trim() }))
+    .filter((t) => t.text.length > 0);
+  updateParentRecord();
 };
 
 const updateParentRecord = () => {
